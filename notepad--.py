@@ -28,6 +28,9 @@ key_repeat = [300,20] #initial and subsequent delay, in ms
 
 slider_width = 15 #pixels
 
+font_path_or_search_name = "consolas"
+font_size = 12
+
 
 
 #Get filename
@@ -54,7 +57,7 @@ pygame.font.init()
 
 pygame.key.set_repeat(*key_repeat)
 
-font = pygame.font.SysFont( ("consolas"), 12 )
+font = pygame.font.SysFont(font_path_or_search_name,font_size)
 
 icon = pygame.Surface((1,1)); icon.set_alpha(0); pygame.display.set_icon(icon)
 pygame.display.set_caption("notepad--")
