@@ -101,7 +101,7 @@ update_screen()
 #Load file
 
 try:
-    file = open(filename,"r")
+    file = open(filename,"rb")
     data = file.read()
     file.close()
 except:
@@ -320,6 +320,23 @@ def draw():
         return col,x,y
 
     special_chars = ["\t"]
+    boms = {
+        "\xEF\xBB\xBF":         "[BOM-UTF8]",
+        "\xFE\xFF":             "[BOM-UTF16-BE]",
+        "\xFF\xFE":             "[BOM-UTF16-LE]",
+        "\x00\x00\xFE\xFF":     "[BOM-UTF32-BE]",
+        "\xFF\xFE\x00\x00":     "[BOM-UTF32-LE]",
+        "\x2B\x2F\x76\x38":     "[BOM-UTF7]",
+        "\x2B\x2F\x76\x39":     "[BOM-UTF7]",
+        "\x2B\x2F\x76\x2B":     "[BOM-UTF7]",
+        "\x2B\x2F\x76\x2F":     "[BOM-UTF7]",
+        "\x2B\x2F\x76\x38\x2D": "[BOM-UTF7]",
+        "\xF7\x64\x4C":         "[BOM-UTF1]",
+        "\xDD\x73\x66\x73":     "[BOM-UTF-EBCDIC]",
+        "\x0E\xFE\xFF":         "[BOM-SCSU]",
+        "\xFB\xEE\x28":         "[BOM-BOCU1]",
+        "\x84\x31\x95\x33":     "[BOM-GB18030]",
+    }
     valid_chars = [c for c in string.printable if c != "\r"]
 
     y = 0
@@ -331,22 +348,36 @@ def draw():
 
         s = ""
         mode = 1 #0=linenum, 1=normal, 2=special, 3=invalid
-        for i in range(len(line)):
+        i = 0
+        while i < len(line):
             if   line[i] in special_chars:
                 if mode != 2:
                     col,x,y = draw_text(s, col,x,y, mode)
                     mode=2; s=""
                 s += line[i]
             elif line[i] not in valid_chars:
-                if mode != 3:
-                    col,x,y = draw_text(s, col,x,y, mode)
-                    mode=3; s=""
-                s += line[i]
+                found_bom = False
+                for key in boms.keys():
+                    if line[i:].startswith(key):
+                        if mode != 2:
+                            col,x,y = draw_text(s, col,x,y, mode)
+                            mode=2; s=""
+                        s += boms[key]
+                        i += len(key) - 1 #-1 for the +1 at the end of the loop
+                            
+                        found_bom = True
+                        break
+                if not found_bom:
+                    if mode != 3:
+                        col,x,y = draw_text(s, col,x,y, mode)
+                        mode=3; s=""
+                    s += line[i]
             else:
                 if mode != 1:
                     col,x,y = draw_text(s, col,x,y, mode)
                     mode=1; s=""
                 s += line[i]
+            i += 1
         col,x,y = draw_text(s, col,x,y, mode)
 
         y += font_dy
