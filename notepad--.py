@@ -276,9 +276,13 @@ def draw():
                         dcols += 1
                 render_color = color_special
             else:
-                render_text = "?"*len(text)
+                render_text = ""
+                for c in text:
+                    if   c=="\r": render_text+="<"
+                    elif c=="\0": render_text+="0"
+                    else:         render_text+="?"
                 render_color = color_invalid
-                dcols = len(text)
+                dcols = len(render_text)
             if line_wrap:
                 max_chars_per_line = (screen_size[0]-slider_width) // font_dx - (digits+1)
                 remaining = max_chars_per_line - col
