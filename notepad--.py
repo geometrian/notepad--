@@ -33,6 +33,10 @@ font_size = 12
 
 tab_width = 4
 
+color_linenum = (128,128,192)
+color_special = (200,)*3
+color_text    = ( 64,)*3
+
 
 
 #Get filename
@@ -226,8 +230,10 @@ def draw():
 
     def draw_text(text, col,x,y, mode):
         if len(text) > 0:
-            if mode == 0:
-                surf = font.render(text, True, (  0,)*3)
+            if   mode == 0:
+                surf = font.render(text, True, color_linenum)
+            elif mode == 1:
+                surf = font.render(text, True, color_text)
                 col += len(text)
             else:
                 render_text = ""
@@ -239,7 +245,7 @@ def draw():
                     else:
                         render_text += c
                         col += 1
-                surf = font.render(render_text, True, (192,)*3)
+                surf = font.render(render_text, True, color_special)
             surface.blit(surf, (x,y))
             x += surf.get_width()
         return col,x
@@ -253,22 +259,22 @@ def draw():
     for j in range(scroll,len(lines),1):
         line = lines[j]
 
-        col,x = draw_text( fmt%(j+1), 0,0,y, 1 )
+        col,x = draw_text( fmt%(j+1), 0,0,y, 0 )
         col = 0
 
         s = ""
-        mode = 0
+        mode = 1
         for i in range(len(line)):
-            if mode == 0:
+            if mode == 1:
                 if line[i] in special_chars:
                     col,x = draw_text(s, col,x,y, mode)
-                    mode=1; s=line[i]
+                    mode=2; s=line[i]
                 else:
                     s += line[i]
             else:
                 if line[i] not in special_chars:
                     col,x = draw_text(s, col,x,y, mode)
-                    mode=0; s=line[i]
+                    mode=1; s=line[i]
                 else:
                     s += line[i]
         draw_text(s, col,x,y, mode)
