@@ -222,11 +222,13 @@ def get_input():
 def draw():
     surface.fill((255,)*3)
 
+    digits = len(str( len(lines) ))
+    fmt = "%"+str(digits)+"d|"
     y = 0
     lines_drawn = 0
     for i in range(scroll,len(lines),1):
-        num = font.render("% 5d|"%(i+1), True, (192,)*3)
-        line = font.render(lines[i], True, (0,)*3)
+        num  = font.render(fmt%(i+1), True, (192,)*3)
+        line = font.render(lines[i],  True, (  0,)*3)
 
         surface.blit(num, (0,y))
         surface.blit(line, (num.get_width(),y))
