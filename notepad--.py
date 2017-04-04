@@ -1,7 +1,13 @@
 #Imports
 
-from Tkinter import Tk
-from tkFileDialog import askopenfilename
+try:
+    from Tkinter import Tk
+    from tkFileDialog import askopenfilename
+    py = 2
+except:
+    import tkinter
+    from tkinter.filedialog import askopenfilename
+    py = 3
 
 import pygame
 from pygame.locals import *
@@ -24,7 +30,12 @@ slider_width = 15 #pixels
 
 #Get filename
 
-Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
+#   http://stackoverflow.com/a/3579625/688624
+#   http://stackoverflow.com/a/3579783/688624
+if py == 2:
+    Tk().withdraw()
+else:
+    tkinter.Tk().withdraw()
 filename = askopenfilename()
 
 if filename == "":
