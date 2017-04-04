@@ -70,14 +70,24 @@ pygame.font.init()
 
 pygame.key.set_repeat(*key_repeat)
 
-def update_font():
-    global font
-    font = pygame.font.SysFont( font_path_or_search_name, font_size )
-update_font()
-
 icon = pygame.Surface((1,1)); icon.set_alpha(0); pygame.display.set_icon(icon)
 pygame.display.set_caption("notepad--")
-surface = pygame.display.set_mode(screen_size,RESIZABLE)
+
+def update_font():
+    global font, font_dx,font_dy
+    font = pygame.font.SysFont( font_path_or_search_name, font_size )
+    metrics = font.metrics("M")[0]
+    font_dx = metrics[1] - metrics[0]
+    #font_dy = metrics[3] - metrics[2]
+    font_dy = font.get_linesize()
+update_font()
+
+def update_screen():
+    global screen_size, surface
+    screen_size[0] = font_dx*rndint(float(screen_size[0]-slider_width)/float(font_dx)) + slider_width
+    screen_size[1] = font_dy*rndint(float(screen_size[1]             )/float(font_dy))
+    surface = pygame.display.set_mode(screen_size,RESIZABLE)
+update_screen()
 
 
 
@@ -187,9 +197,11 @@ def get_input():
             elif event.key == K_EQUALS: #Plus
                 font_size = clamp(font_size+1, 1,72)
                 update_font()
+                update_screen()
             elif event.key == K_MINUS:
                 font_size = clamp(font_size-1, 1,72)
                 update_font()
+                update_screen()
         elif event.type == MOUSEBUTTONDOWN:
             if   event.button == 1:
                 if mouse_position[0] >= screen_size[0] - slider.w:
@@ -208,7 +220,7 @@ def get_input():
                 scrolling = 0
         elif event.type == VIDEORESIZE:
             screen_size = list(event.size)
-            surface = pygame.display.set_mode(screen_size,RESIZABLE)
+            update_screen()
     if scrolling == 1:
         if mouse_rel[1] != 0:
 ##            temp = scrolling_uneaten
