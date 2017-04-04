@@ -270,7 +270,7 @@ def get_input():
             slider.click_toward(mouse_position[1])
             try_scroll_to(rndint( slider.part * slider.n ))
             dirty = True
-            frame = rndint(mouse_repeat[1] * 60)
+            frame = rndint(mouse_repeat[1]*0.001 * 60)
         else:
             frame -= 1
 
