@@ -9,6 +9,7 @@ try:
 except:
     import tkinter
     import tkinter.filedialog
+    import tkinter.simpledialog
     py = 3
     inp = input
 
