@@ -31,6 +31,8 @@ slider_width = 15 #pixels
 font_path_or_search_name = "consolas"
 font_size = 12
 
+tab_width = 4
+
 
 
 #Get filename
@@ -222,16 +224,54 @@ def get_input():
 def draw():
     surface.fill((255,)*3)
 
+    def draw_text(text, col,x,y, mode):
+        if len(text) > 0:
+            if mode == 0:
+                surf = font.render(text, True, (  0,)*3)
+                col += len(text)
+            else:
+                render_text = ""
+                for c in text:
+                    if c == "\t":
+                        tab = "~"*((col-1) % tab_width) + ">"
+                        render_text += tab
+                        col += len(tab)
+                    else:
+                        render_text += c
+                        col += 1
+                surf = font.render(render_text, True, (192,)*3)
+            surface.blit(surf, (x,y))
+            x += surf.get_width()
+        return col,x
+
+    special_chars = ["\t"]
+
     digits = len(str( len(lines) ))
     fmt = "%"+str(digits)+"d|"
     y = 0
     lines_drawn = 0
-    for i in range(scroll,len(lines),1):
-        num  = font.render(fmt%(i+1), True, (192,)*3)
-        line = font.render(lines[i],  True, (  0,)*3)
+    for j in range(scroll,len(lines),1):
+        line = lines[j]
 
-        surface.blit(num, (0,y))
-        surface.blit(line, (num.get_width(),y))
+        col,x = draw_text( fmt%(j+1), 0,0,y, 1 )
+        col = 0
+
+        s = ""
+        mode = 0
+        for i in range(len(line)):
+            if mode == 0:
+                if line[i] in special_chars:
+                    col,x = draw_text(s, col,x,y, mode)
+                    mode=1; s=line[i]
+                else:
+                    s += line[i]
+            else:
+                if line[i] not in special_chars:
+                    col,x = draw_text(s, col,x,y, mode)
+                    mode=0; s=line[i]
+                else:
+                    s += line[i]
+        draw_text(s, col,x,y, mode)
 
         lines_drawn += 1
         y += font.get_height()
