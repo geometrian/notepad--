@@ -4,10 +4,12 @@ try:
     from Tkinter import Tk
     from tkFileDialog import askopenfilename
     py = 2
+    inp = raw_input
 except:
     import tkinter
     from tkinter.filedialog import askopenfilename
     py = 3
+    inp = input
 
 import pygame
 from pygame.locals import *
@@ -78,6 +80,7 @@ lines = data.split("\n")
 
 scroll = 0
 scrolling = 0
+scrolling_uneaten = 0
 
 class Slider(object):
     def __init__(self):
@@ -89,26 +92,34 @@ class Slider(object):
         self.w = slider_width
         self.h =            0
 
+    def _update_part(self):
+        self.y = int( self.part * (screen_size[1]-self.h) )
+
     def update_scroll(self):
         self.part = float(scroll) / float(self.n-1)
+        self._update_part()
 
     def screen_collides(self, screen_y):
         return screen_y >= self.y and screen_y < self.y+self.h
     def screen_to_part(self, screen_y):
         assert self.h < screen_size[1]
         return clamp( float(screen_y-self.h/2.0)/float(screen_size[1]-self.h), 0.0,1.0 )
+    def part_to_screen(self):
+        return clamp(rndint(self.part * float(screen_size[1]-self.h) + self.h/2.0), 0,screen_size[1]-1)
     def click_toward(self, mouse_y):
         target = self.screen_to_part(mouse_y)
         if abs(target-self.part)<0.1: self.part=target
         else:
             if target>self.part: self.part+=0.1
             else:                self.part-=0.1
+        self._update_part()
     def click_set(self, mouse_y):
         self.part = self.screen_to_part(mouse_y)
+        self._update_part()
+    def click_move(self, dy):
+        self.click_set( self.part_to_screen() + dy )
 
     def draw(self):
-        self.y = int( self.part * (screen_size[1]-self.h) )
-
         scrollable_pixels = font.get_height() * (self.n-1)
         bar_part = float(screen_size[1]) / float(scrollable_pixels+screen_size[1])
         self.h = int(bar_part * screen_size[1])
@@ -129,7 +140,7 @@ def try_scroll_to(to):
     slider.update_scroll()
 frame = 0
 def get_input():
-    global scroll,scrolling, screen_size, surface, frame
+    global scroll,scrolling,scrolling_uneaten, screen_size, surface, frame
     keys_pressed = pygame.key.get_pressed()
     mouse_buttons = pygame.mouse.get_pressed()
     mouse_position = pygame.mouse.get_pos()
@@ -151,6 +162,7 @@ def get_input():
                 if mouse_position[0] >= screen_size[0] - slider.w:
                     if slider.screen_collides(mouse_position[1]):
                         scrolling = 1
+                        scrolling_uneaten = 0
                     else:
                         scrolling = 2
                         frame = rndint(0.300 * 60)
@@ -165,8 +177,18 @@ def get_input():
             screen_size = list(event.size)
             surface = pygame.display.set_mode(screen_size,RESIZABLE)
     if scrolling == 1:
-        slider.click_set(mouse_position[1])
-        try_scroll_to(rndint( slider.part * slider.n ))
+        if mouse_rel[1] != 0:
+##            temp = scrolling_uneaten
+            dy = scrolling_uneaten + mouse_rel[1]
+
+            y0 = slider.y
+            slider.click_move(dy)
+            try_scroll_to(rndint( slider.part * slider.n ))
+            y1 = slider.y
+
+            scrolling_uneaten = dy - (y1-y0)
+##            print("rel %d + accum %d = %d; moved %d->%d so new accum %d"%( mouse_rel[1],temp,dy, y0,y1, scrolling_uneaten))
+    ##        slider.click_set(mouse_position[1])
     elif scrolling == 2:
         if frame == 0:
             slider.click_toward(mouse_position[1])
