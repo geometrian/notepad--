@@ -41,6 +41,8 @@ color_special = (200,)*3
 color_invalid = (200,  0,  0)
 color_text    = ( 64,)*3
 
+line_wrap = True
+
 
 
 #Get filename
@@ -171,7 +173,7 @@ frame = 0
 def get_input():
     global scroll, scrolling, scrolling_uneaten
     global font_size
-    global screen_size, surface, frame
+    global screen_size, surface, frame, line_wrap
     keys_pressed = pygame.key.get_pressed()
     mouse_buttons = pygame.mouse.get_pressed()
     mouse_position = pygame.mouse.get_pos()
@@ -188,6 +190,8 @@ def get_input():
                         result = tkinter.simpledialog.askinteger("Go to line:","Line number:",minvalue=1,initialvalue=scroll+1,maxvalue=len(lines))
                     if result != None:
                         scroll = result - 1
+            elif event.key == K_w:
+                line_wrap = not line_wrap
             elif event.key == K_PAGEDOWN:
                 page_height_lines = screen_size[1] // font.get_linesize()
                 try_scroll_by(  page_height_lines-1 )
@@ -247,42 +251,63 @@ def get_input():
 def draw():
     surface.fill((255,)*3)
 
+    digits = len(str( len(lines) ))
+    fmt = "%"+str(digits)+"d|"
+
     def draw_text(text, col,x,y, mode):
         if len(text) > 0:
             if   mode == 0:
-                surf = font.render(text, True, color_linenum)
+                render_text=text; render_color=color_linenum; dcols=0
             elif mode == 1:
-                surf = font.render(text, True, color_text)
-                col += len(text)
+                render_text=text; render_color=color_text; dcols=len(text)
             elif mode == 2:
                 render_text = ""
+                temp = col
+                dcols = 0
                 for c in text:
                     if c == "\t":
-                        tab = "~"*((col-1) % tab_width) + ">"
+                        tab = "~"*((temp-1) % tab_width) + ">"
                         render_text += tab
-                        col += len(tab)
+                        temp += len(tab)
+                        dcols += len(tab)
                     else:
                         render_text += c
-                        col += 1
-                surf = font.render(render_text, True, color_special)
+                        temp += 1
+                        dcols += 1
+                render_color = color_special
             else:
-                surf = font.render("?"*len(text), True, color_invalid)
-                col += len(text)
-            surface.blit(surf, (x,y))
-            x += surf.get_width()
-        return col,x
+                render_text = "?"*len(text)
+                render_color = color_invalid
+                dcols = len(text)
+            if line_wrap:
+                max_chars_per_line = (screen_size[0]-slider_width) // font_dx - (digits+1)
+                remaining = max_chars_per_line - col
+                if len(render_text) <= remaining:
+                    surf = font.render(render_text, True, render_color)
+                    surface.blit(surf, (x,y))
+                    x += font_dx * len(render_text)
+                    col += dcols
+                else:
+                    surf = font.render(render_text[:remaining], True, render_color)
+                    surface.blit(surf, (x,y))
+                    y += font.get_linesize()
+                    col,x,y = draw_text( " "*digits+"|", 0,0,y, 0 )
+                    return draw_text( render_text[remaining:], col,x,y, mode )
+            else:
+                surf = font.render(render_text, True, render_color)
+                surface.blit(surf, (x,y))
+                x += font_dx * len(render_text)
+                col += dcols
+        return col,x,y
 
     special_chars = ["\t"]
     valid_chars = [c for c in string.printable if c != "\r"]
 
-    digits = len(str( len(lines) ))
-    fmt = "%"+str(digits)+"d|"
     y = 0
-    lines_drawn = 0
     for j in range(scroll,len(lines),1):
         line = lines[j]
 
-        col,x = draw_text( fmt%(j+1), 0,0,y, 0 )
+        col,x,y = draw_text( fmt%(j+1), 0,0,y, 0 )
         col = 0
 
         s = ""
@@ -290,22 +315,21 @@ def draw():
         for i in range(len(line)):
             if   line[i] in special_chars:
                 if mode != 2:
-                    col,x = draw_text(s, col,x,y, mode)
+                    col,x,y = draw_text(s, col,x,y, mode)
                     mode=2; s=""
                 s += line[i]
             elif line[i] not in valid_chars:
                 if mode != 3:
-                    col,x = draw_text(s, col,x,y, mode)
+                    col,x,y = draw_text(s, col,x,y, mode)
                     mode=3; s=""
                 s += line[i]
             else:
                 if mode != 1:
-                    col,x = draw_text(s, col,x,y, mode)
+                    col,x,y = draw_text(s, col,x,y, mode)
                     mode=1; s=""
                 s += line[i]
-        draw_text(s, col,x,y, mode)
+        col,x,y = draw_text(s, col,x,y, mode)
 
-        lines_drawn += 1
         y += font.get_linesize()
         if y >= screen_size[1]:
             break
