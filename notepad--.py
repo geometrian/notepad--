@@ -84,7 +84,8 @@ def update_font():
     global font, font_dx,font_dy
     font = pygame.font.SysFont( font_path_or_search_name, font_size )
     metrics = font.metrics("M")[0]
-    font_dx = metrics[1] - metrics[0]
+    #font_dx = metrics[1] - metrics[0]
+    font_dx = metrics[4]
     #font_dy = metrics[3] - metrics[2]
     font_dy = max([ font.get_linesize()+font_linepad, 1 ])
 update_font()
@@ -285,6 +286,11 @@ def draw():
     digits = len(str( len(lines) ))
     fmt = "%"+str(digits)+"d|"
 
+    def draw_chars(text, color, x,y):
+        surf = font.render(text, True, color)
+        surface.blit(surf, (x,y))
+        x += font_dx * len(text)
+        return x
     def draw_text(text, col,x,y, mode):
         if len(text) > 0:
             if   mode == 0:
@@ -318,20 +324,15 @@ def draw():
                 max_chars_per_line = (screen_size[0]-slider_width) // font_dx - (digits+1)
                 remaining = max_chars_per_line - col
                 if len(render_text) <= remaining:
-                    surf = font.render(render_text, True, render_color)
-                    surface.blit(surf, (x,y))
-                    x += font_dx * len(render_text)
+                    x = draw_chars(render_text, render_color, x,y)
                     col += dcols
                 else:
-                    surf = font.render(render_text[:remaining], True, render_color)
-                    surface.blit(surf, (x,y))
+                    draw_chars(render_text[:remaining], render_color, x,y)
                     y += font_dy
                     col,x,y = draw_text( " "*digits+"|", 0,0,y, 0 )
                     return draw_text( render_text[remaining:], col,x,y, mode )
             else:
-                surf = font.render(render_text, True, render_color)
-                surface.blit(surf, (x,y))
-                x += font_dx * len(render_text)
+                x = draw_chars(render_text, render_color, x,y)
                 col += dcols
         return col,x,y
 
@@ -380,7 +381,7 @@ def draw():
                             mode=2; s=""
                         s += boms[key]
                         i += len(key) - 1 #-1 for the +1 at the end of the loop
-                            
+
                         found_bom = True
                         break
                 if not found_bom:
