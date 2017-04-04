@@ -108,7 +108,17 @@ except:
     print("Could not open file \"%s\"!"%filename)
     sys.exit(-1)
 
+file_size = os.path.getsize(filename)
 lines = data.split("\n")
+
+for magn,suff in [(1024**4,"TiB"),(1024**3,"GiB"),(1024**2,"MiB"),(1024,"KiB"),(0,"B")]:
+    if file_size >= magn:
+        if magn > 0:
+            file_size = str(round(file_size/float(magn),3)) + suff
+        else:
+            file_size = str(file_size) + suff
+        break
+pygame.display.set_caption("notepad-- (\""+filename+"\" ~ "+file_size+")")
 
 
 
