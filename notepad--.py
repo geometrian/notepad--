@@ -128,6 +128,8 @@ scroll = 0
 scrolling = 0
 scrolling_uneaten = 0
 
+dirty = True
+
 class Slider(object):
     def __init__(self):
         self.part = 0.0
@@ -188,7 +190,7 @@ frame = 0
 def get_input():
     global scroll, scrolling, scrolling_uneaten
     global font_size
-    global screen_size, surface, frame, line_wrap
+    global screen_size, surface, frame, line_wrap, dirty
     keys_pressed = pygame.key.get_pressed()
     mouse_buttons = pygame.mouse.get_pressed()
     mouse_position = pygame.mouse.get_pos()
@@ -205,22 +207,28 @@ def get_input():
                         result = tkinter.simpledialog.askinteger("Go to line:","Line number:",minvalue=1,initialvalue=scroll+1,maxvalue=len(lines))
                     if result != None:
                         scroll = result - 1
+                        dirty = True
             elif event.key == K_w:
                 line_wrap = not line_wrap
+                dirty = True
             elif event.key == K_PAGEDOWN:
                 page_height_lines = screen_size[1] // font_dy
                 try_scroll_by(  page_height_lines-1 )
+                dirty = True
             elif event.key == K_PAGEUP:
                 page_height_lines = screen_size[1] // font_dy
                 try_scroll_by(-(page_height_lines-1))
+                dirty = True
             elif event.key == K_EQUALS: #Plus
                 font_size = clamp(font_size+1, 1,72)
                 update_font()
                 update_screen()
+                dirty = True
             elif event.key == K_MINUS:
                 font_size = clamp(font_size-1, 1,72)
                 update_font()
                 update_screen()
+                dirty = True
         elif event.type == MOUSEBUTTONDOWN:
             if   event.button == 1:
                 if mouse_position[0] >= screen_size[0] - slider.w:
@@ -232,14 +240,17 @@ def get_input():
                         frame = rndint(mouse_repeat[0]*0.001 * 60)
             elif event.button == 4:
                 try_scroll_by(-5)
+                dirty = True
             elif event.button == 5:
                 try_scroll_by( 5)
+                dirty = True
         elif event.type == MOUSEBUTTONUP:
             if   event.button == 1:
                 scrolling = 0
         elif event.type == VIDEORESIZE:
             screen_size = list(event.size)
             update_screen()
+            dirty = True
     if scrolling == 1:
         if mouse_rel[1] != 0:
 ##            temp = scrolling_uneaten
@@ -248,6 +259,7 @@ def get_input():
             y0 = slider.y
             slider.click_move(dy)
             try_scroll_to(rndint( slider.part * slider.n ))
+            dirty = True
             y1 = slider.y
 
             scrolling_uneaten = dy - (y1-y0)
@@ -257,6 +269,7 @@ def get_input():
         if frame == 0:
             slider.click_toward(mouse_position[1])
             try_scroll_to(rndint( slider.part * slider.n ))
+            dirty = True
             frame = rndint(mouse_repeat[1] * 60)
         else:
             frame -= 1
@@ -264,6 +277,9 @@ def get_input():
     return True
 
 def draw():
+    global dirty
+    if not dirty: return
+
     surface.fill((255,)*3)
 
     digits = len(str( len(lines) ))
@@ -387,6 +403,8 @@ def draw():
     slider.draw()
 
     pygame.display.flip()
+
+    dirty = False
 
 def main():
     clock = pygame.time.Clock()
