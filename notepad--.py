@@ -38,10 +38,13 @@ font_linepad = -3
 
 tab_width = 4
 
-color_linenum = (128,128,192)
-color_special = (200,)*3
-color_invalid = (200,  0,  0)
-color_text    = ( 64,)*3
+color_linenum       = (128,128,192)
+color_special       = (200,)*3
+color_invalid       = (200,  0,  0)
+color_text          = ( 64,)*3
+color_slider_bg     = (255,)*3
+color_slider_bar    = (192,)*3
+color_slider_border = color_linenum #(225,)*3
 
 line_wrap = True
 
@@ -158,9 +161,9 @@ class Slider(object):
         self.h = int(bar_part * screen_size[1])
         if self.h<self.w: self.h=min([self.w,max([screen_size[1]-1,0])])
 
-        pygame.draw.rect(surface, (255,)*3, (screen_size[0]-self.w,0,self.w,screen_size[1]))
-        pygame.draw.line(surface, (225,)*3, (screen_size[0]-self.w,0),(screen_size[0]-15,screen_size[1]))
-        pygame.draw.rect(surface, (192,)*3, (screen_size[0]-self.w,self.y,15,self.h))
+        pygame.draw.rect(surface, color_slider_bg,     (screen_size[0]-self.w,0,self.w,screen_size[1]))
+        pygame.draw.rect(surface, color_slider_bar,    (screen_size[0]-self.w,self.y,15,self.h))
+        pygame.draw.line(surface, color_slider_border, (screen_size[0]-self.w,0),(screen_size[0]-15,screen_size[1]))
 slider = Slider()
 
 def try_scroll_by(delta):
