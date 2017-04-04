@@ -34,6 +34,7 @@ slider_width = 15 #pixels
 
 font_path_or_search_name = "consolas"
 font_size = 12
+font_linepad = -3
 
 tab_width = 4
 
@@ -82,7 +83,7 @@ def update_font():
     metrics = font.metrics("M")[0]
     font_dx = metrics[1] - metrics[0]
     #font_dy = metrics[3] - metrics[2]
-    font_dy = font.get_linesize()
+    font_dy = max([ font.get_linesize()+font_linepad, 1 ])
 update_font()
 
 def update_screen():
@@ -152,7 +153,7 @@ class Slider(object):
         self.click_set( self.part_to_screen() + dy )
 
     def draw(self):
-        scrollable_pixels = font.get_linesize() * (self.n-1)
+        scrollable_pixels = font_dy * (self.n-1)
         bar_part = float(screen_size[1]) / float(scrollable_pixels+screen_size[1])
         self.h = int(bar_part * screen_size[1])
         if self.h<self.w: self.h=min([self.w,max([screen_size[1]-1,0])])
@@ -194,10 +195,10 @@ def get_input():
             elif event.key == K_w:
                 line_wrap = not line_wrap
             elif event.key == K_PAGEDOWN:
-                page_height_lines = screen_size[1] // font.get_linesize()
+                page_height_lines = screen_size[1] // font_dy
                 try_scroll_by(  page_height_lines-1 )
             elif event.key == K_PAGEUP:
-                page_height_lines = screen_size[1] // font.get_linesize()
+                page_height_lines = screen_size[1] // font_dy
                 try_scroll_by(-(page_height_lines-1))
             elif event.key == K_EQUALS: #Plus
                 font_size = clamp(font_size+1, 1,72)
@@ -295,7 +296,7 @@ def draw():
                 else:
                     surf = font.render(render_text[:remaining], True, render_color)
                     surface.blit(surf, (x,y))
-                    y += font.get_linesize()
+                    y += font_dy
                     col,x,y = draw_text( " "*digits+"|", 0,0,y, 0 )
                     return draw_text( render_text[remaining:], col,x,y, mode )
             else:
@@ -335,7 +336,7 @@ def draw():
                 s += line[i]
         col,x,y = draw_text(s, col,x,y, mode)
 
-        y += font.get_linesize()
+        y += font_dy
         if y >= screen_size[1]:
             break
 
