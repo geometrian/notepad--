@@ -14,7 +14,10 @@ except:
 import pygame
 from pygame.locals import *
 
-import sys, os, traceback
+import os
+import string
+import sys
+import traceback
 
 from _helpers import *
 
@@ -35,6 +38,7 @@ tab_width = 4
 
 color_linenum = (128,128,192)
 color_special = (200,)*3
+color_invalid = (200,  0,  0)
 color_text    = ( 64,)*3
 
 
@@ -235,7 +239,7 @@ def draw():
             elif mode == 1:
                 surf = font.render(text, True, color_text)
                 col += len(text)
-            else:
+            elif mode == 2:
                 render_text = ""
                 for c in text:
                     if c == "\t":
@@ -246,11 +250,15 @@ def draw():
                         render_text += c
                         col += 1
                 surf = font.render(render_text, True, color_special)
+            else:
+                surf = font.render("?"*len(text), True, color_invalid)
+                col += len(text)
             surface.blit(surf, (x,y))
             x += surf.get_width()
         return col,x
 
     special_chars = ["\t"]
+    valid_chars = [c for c in string.printable if c != "\r"]
 
     digits = len(str( len(lines) ))
     fmt = "%"+str(digits)+"d|"
@@ -263,20 +271,23 @@ def draw():
         col = 0
 
         s = ""
-        mode = 1
+        mode = 1 #0=linenum, 1=normal, 2=special, 3=invalid
         for i in range(len(line)):
-            if mode == 1:
-                if line[i] in special_chars:
+            if   line[i] in special_chars:
+                if mode != 2:
                     col,x = draw_text(s, col,x,y, mode)
-                    mode=2; s=line[i]
-                else:
-                    s += line[i]
+                    mode=2; s=""
+                s += line[i]
+            elif line[i] not in valid_chars:
+                if mode != 3:
+                    col,x = draw_text(s, col,x,y, mode)
+                    mode=3; s=""
+                s += line[i]
             else:
-                if line[i] not in special_chars:
+                if mode != 1:
                     col,x = draw_text(s, col,x,y, mode)
-                    mode=1; s=line[i]
-                else:
-                    s += line[i]
+                    mode=1; s=""
+                s += line[i]
         draw_text(s, col,x,y, mode)
 
         lines_drawn += 1
