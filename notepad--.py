@@ -8,6 +8,7 @@ try:
     inp = raw_input
 except:
     import tkinter
+    import tkinter.filedialog
     py = 3
     inp = input
 
@@ -99,7 +100,7 @@ update_screen()
 
 
 
-#Load file
+#Load file (as binary)
 
 try:
     file = open(filename,"rb")
@@ -110,7 +111,7 @@ except:
     sys.exit(-1)
 
 file_size = os.path.getsize(filename)
-lines = data.split("\n")
+lines = data.split(b"\n")
 
 for magn,suff in [(1024**4,"TiB"),(1024**3,"GiB"),(1024**2,"MiB"),(1024,"KiB"),(0,"B")]:
     if file_size >= magn:
@@ -284,7 +285,7 @@ def draw():
     surface.fill((255,)*3)
 
     digits = len(str( len(lines) ))
-    fmt = "%"+str(digits)+"d|"
+    fmt = b"%"+(b"%d"%digits)+b"d|"
 
     def draw_chars(text, color, x,y):
         surf = font.render(text, True, color)
@@ -298,12 +299,13 @@ def draw():
             elif mode == 1:
                 render_text=text; render_color=color_text; dcols=len(text)
             elif mode == 2:
-                render_text = ""
+                render_text = b""
                 temp = col
                 dcols = 0
-                for c in text:
-                    if c == "\t":
-                        tab = "~"*((temp-1) % tab_width) + ">"
+                for i in range(len(text)):
+                    c = text[i:i+1]
+                    if c == b"\t":
+                        tab = b"~"*((temp-1) % tab_width) + b">"
                         render_text += tab
                         temp += len(tab)
                         dcols += len(tab)
@@ -313,11 +315,12 @@ def draw():
                         dcols += 1
                 render_color = color_special
             else:
-                render_text = ""
-                for c in text:
-                    if   c=="\r": render_text+="<"
-                    elif c=="\0": render_text+="0"
-                    else:         render_text+="?"
+                render_text = b""
+                for i in range(len(text)):
+                    c = text[i:i+1]
+                    if   c==b"\r": render_text+=b"<"
+                    elif c==b"\0": render_text+=b"0"
+                    else:          render_text+=b"?"
                 render_color = color_invalid
                 dcols = len(render_text)
             if line_wrap:
@@ -329,32 +332,32 @@ def draw():
                 else:
                     draw_chars(render_text[:remaining], render_color, x,y)
                     y += font_dy
-                    col,x,y = draw_text( " "*digits+"|", 0,0,y, 0 )
+                    col,x,y = draw_text( b" "*digits+b"|", 0,0,y, 0 )
                     return draw_text( render_text[remaining:], col,x,y, mode )
             else:
                 x = draw_chars(render_text, render_color, x,y)
                 col += dcols
         return col,x,y
 
-    special_chars = ["\t"]
+    special_chars = b"\t"
     boms = {
-        "\xEF\xBB\xBF":         "[BOM-UTF8]",
-        "\xFE\xFF":             "[BOM-UTF16-BE]",
-        "\xFF\xFE":             "[BOM-UTF16-LE]",
-        "\x00\x00\xFE\xFF":     "[BOM-UTF32-BE]",
-        "\xFF\xFE\x00\x00":     "[BOM-UTF32-LE]",
-        "\x2B\x2F\x76\x38":     "[BOM-UTF7]",
-        "\x2B\x2F\x76\x39":     "[BOM-UTF7]",
-        "\x2B\x2F\x76\x2B":     "[BOM-UTF7]",
-        "\x2B\x2F\x76\x2F":     "[BOM-UTF7]",
-        "\x2B\x2F\x76\x38\x2D": "[BOM-UTF7]",
-        "\xF7\x64\x4C":         "[BOM-UTF1]",
-        "\xDD\x73\x66\x73":     "[BOM-UTF-EBCDIC]",
-        "\x0E\xFE\xFF":         "[BOM-SCSU]",
-        "\xFB\xEE\x28":         "[BOM-BOCU1]",
-        "\x84\x31\x95\x33":     "[BOM-GB18030]",
+        b"\xEF\xBB\xBF":         b"[BOM-UTF8]",
+        b"\xFE\xFF":             b"[BOM-UTF16-BE]",
+        b"\xFF\xFE":             b"[BOM-UTF16-LE]",
+        b"\x00\x00\xFE\xFF":     b"[BOM-UTF32-BE]",
+        b"\xFF\xFE\x00\x00":     b"[BOM-UTF32-LE]",
+        b"\x2B\x2F\x76\x38":     b"[BOM-UTF7]",
+        b"\x2B\x2F\x76\x39":     b"[BOM-UTF7]",
+        b"\x2B\x2F\x76\x2B":     b"[BOM-UTF7]",
+        b"\x2B\x2F\x76\x2F":     b"[BOM-UTF7]",
+        b"\x2B\x2F\x76\x38\x2D": b"[BOM-UTF7]",
+        b"\xF7\x64\x4C":         b"[BOM-UTF1]",
+        b"\xDD\x73\x66\x73":     b"[BOM-UTF-EBCDIC]",
+        b"\x0E\xFE\xFF":         b"[BOM-SCSU]",
+        b"\xFB\xEE\x28":         b"[BOM-BOCU1]",
+        b"\x84\x31\x95\x33":     b"[BOM-GB18030]",
     }
-    valid_chars = [c for c in string.printable if c != "\r"]
+    valid_chars = ( "".join([c for c in string.printable if c!="\r"]) ).encode("utf-8")
 
     y = 0
     for j in range(scroll,len(lines),1):
@@ -363,22 +366,23 @@ def draw():
         col,x,y = draw_text( fmt%(j+1), 0,0,y, 0 )
         col = 0
 
-        s = ""
+        s = b""
         mode = 1 #0=linenum, 1=normal, 2=special, 3=invalid
         i = 0
         while i < len(line):
-            if   line[i] in special_chars:
+            c = line[i:i+1]
+            if   c in special_chars:
                 if mode != 2:
                     col,x,y = draw_text(s, col,x,y, mode)
-                    mode=2; s=""
-                s += line[i]
-            elif line[i] not in valid_chars:
+                    mode=2; s=b""
+                s += c
+            elif c not in valid_chars:
                 found_bom = False
                 for key in boms.keys():
                     if line[i:].startswith(key):
                         if mode != 2:
                             col,x,y = draw_text(s, col,x,y, mode)
-                            mode=2; s=""
+                            mode=2; s=b""
                         s += boms[key]
                         i += len(key) - 1 #-1 for the +1 at the end of the loop
 
@@ -387,13 +391,13 @@ def draw():
                 if not found_bom:
                     if mode != 3:
                         col,x,y = draw_text(s, col,x,y, mode)
-                        mode=3; s=""
-                    s += line[i]
+                        mode=3; s=b""
+                    s += c
             else:
                 if mode != 1:
                     col,x,y = draw_text(s, col,x,y, mode)
-                    mode=1; s=""
-                s += line[i]
+                    mode=1; s=b""
+                s += c
             i += 1
         col,x,y = draw_text(s, col,x,y, mode)
 
