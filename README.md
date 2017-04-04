@@ -5,6 +5,9 @@ Many text editors won't allow you to view large files.  This text editor will at
 
 The "editor" (currently) does not support editing; only viewing.  Hence, it's `notepad--` (a nod to the otherwise excellent [Notepad++](https://notepad-plus-plus.org/)).
 
+![Screenshot (ASCII)](screenshots/screenshot-ascii.png)
+![Screenshot (binary)](screenshots/screenshot-binary.png)
+
 ## Options and Features
 
 | Command                              | Effect              |
