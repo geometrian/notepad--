@@ -70,7 +70,10 @@ pygame.font.init()
 
 pygame.key.set_repeat(*key_repeat)
 
-font = pygame.font.SysFont(font_path_or_search_name,font_size)
+def update_font():
+    global font
+    font = pygame.font.SysFont( font_path_or_search_name, font_size )
+update_font()
 
 icon = pygame.Surface((1,1)); icon.set_alpha(0); pygame.display.set_icon(icon)
 pygame.display.set_caption("notepad--")
@@ -136,7 +139,7 @@ class Slider(object):
         self.click_set( self.part_to_screen() + dy )
 
     def draw(self):
-        scrollable_pixels = font.get_height() * (self.n-1)
+        scrollable_pixels = font.get_linesize() * (self.n-1)
         bar_part = float(screen_size[1]) / float(scrollable_pixels+screen_size[1])
         self.h = int(bar_part * screen_size[1])
         if self.h<self.w: self.h=min([self.w,max([screen_size[1]-1,0])])
@@ -157,7 +160,7 @@ def try_scroll_to(to):
 frame = 0
 def get_input():
     global scroll, scrolling, scrolling_uneaten
-    global font, font_size
+    global font_size
     global screen_size, surface, frame
     keys_pressed = pygame.key.get_pressed()
     mouse_buttons = pygame.mouse.get_pressed()
@@ -176,17 +179,17 @@ def get_input():
                     if result != None:
                         scroll = result - 1
             elif event.key == K_PAGEDOWN:
-                page_height_lines = screen_size[1] // font.get_height()
+                page_height_lines = screen_size[1] // font.get_linesize()
                 try_scroll_by(  page_height_lines-1 )
             elif event.key == K_PAGEUP:
-                page_height_lines = screen_size[1] // font.get_height()
+                page_height_lines = screen_size[1] // font.get_linesize()
                 try_scroll_by(-(page_height_lines-1))
             elif event.key == K_EQUALS: #Plus
                 font_size = clamp(font_size+1, 1,72)
-                font = pygame.font.SysFont(font_path_or_search_name,font_size)
+                update_font()
             elif event.key == K_MINUS:
                 font_size = clamp(font_size-1, 1,72)
-                font = pygame.font.SysFont(font_path_or_search_name,font_size)
+                update_font()
         elif event.type == MOUSEBUTTONDOWN:
             if   event.button == 1:
                 if mouse_position[0] >= screen_size[0] - slider.w:
@@ -291,7 +294,7 @@ def draw():
         draw_text(s, col,x,y, mode)
 
         lines_drawn += 1
-        y += font.get_height()
+        y += font.get_linesize()
         if y >= screen_size[1]:
             break
 
