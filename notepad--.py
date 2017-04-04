@@ -1,3 +1,9 @@
+from Tkinter import Tk
+from tkFileDialog import askopenfilename
+
+Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
+filename = askopenfilename()
+
 import pygame
 from pygame.locals import *
 import sys, os, traceback
@@ -15,7 +21,7 @@ pygame.key.set_repeat(300,20)
 font = pygame.font.SysFont( ("consolas"), 12 )
 
 
-file = open("bigfile.obj","r")
+file = open(filename,"r")
 data = file.read()
 file.close()
 
