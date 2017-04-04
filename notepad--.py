@@ -95,6 +95,7 @@ class Slider(object):
     def screen_collides(self, screen_y):
         return screen_y >= self.y and screen_y < self.y+self.h
     def screen_to_part(self, screen_y):
+        assert self.h < screen_size[1]
         return clamp( float(screen_y-self.h/2.0)/float(screen_size[1]-self.h), 0.0,1.0 )
     def click_toward(self, mouse_y):
         target = self.screen_to_part(mouse_y)
@@ -108,9 +109,10 @@ class Slider(object):
     def draw(self):
         self.y = int( self.part * (screen_size[1]-self.h) )
 
-        bar_part = float(screen_size[1]) / float(font.get_height()*self.n)
+        scrollable_pixels = font.get_height() * (self.n-1)
+        bar_part = float(screen_size[1]) / float(scrollable_pixels+screen_size[1])
         self.h = int(bar_part * screen_size[1])
-        if self.h<self.w: self.h=self.w
+        if self.h<self.w: self.h=min([self.w,max([screen_size[1]-1,0])])
 
         pygame.draw.rect(surface, (255,)*3, (screen_size[0]-self.w,0,self.w,screen_size[1]))
         pygame.draw.line(surface, (225,)*3, (screen_size[0]-self.w,0),(screen_size[0]-15,screen_size[1]))
