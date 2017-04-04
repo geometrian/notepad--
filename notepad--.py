@@ -1,13 +1,13 @@
 #Imports
 
 try:
-    from Tkinter import Tk
-    from tkFileDialog import askopenfilename
+    import Tkinter
+    import tkFileDialog
+    import tkSimpleDialog
     py = 2
     inp = raw_input
 except:
     import tkinter
-    from tkinter.filedialog import askopenfilename
     py = 3
     inp = input
 
@@ -38,10 +38,13 @@ font_size = 12
 #   http://stackoverflow.com/a/3579625/688624
 #   http://stackoverflow.com/a/3579783/688624
 if py == 2:
-    Tk().withdraw()
+    root = Tkinter.Tk()
+    root.withdraw()
+    filename = tkFileDialog.askopenfilename()
 else:
-    tkinter.Tk().withdraw()
-filename = askopenfilename()
+    root = tkinter.Tk()
+    root.withdraw()
+    filename = tkinter.filedialog.askopenfilename()
 
 if filename == "":
     sys.exit(0)
@@ -154,8 +157,14 @@ def get_input():
         if   event.type == QUIT: return False
         elif event.type == KEYDOWN:
             if   event.key == K_ESCAPE: return False
-            elif event.key == K_g and (keys_pressed[K_LALT] or keys_pressed[K_RALT]):
-                scroll = int(input("Go to line: "))
+            elif event.key == K_g:
+                if keys_pressed[K_LALT] or keys_pressed[K_RALT]:
+                    if py == 2:
+                        result =       tkSimpleDialog.askinteger("Go to line:","Line number:",minvalue=1,initialvalue=scroll+1,maxvalue=len(lines))
+                    else:
+                        result = tkinter.simpledialog.askinteger("Go to line:","Line number:",minvalue=1,initialvalue=scroll+1,maxvalue=len(lines))
+                    if result != None:
+                        scroll = result - 1
             elif event.key == K_PAGEDOWN:
                 page_height_lines = screen_size[1] // font.get_height()
                 try_scroll_by(  page_height_lines-1 )
@@ -216,7 +225,7 @@ def draw():
     y = 0
     lines_drawn = 0
     for i in range(scroll,len(lines),1):
-        num = font.render("% 5d|"%(i), True, (192,)*3)
+        num = font.render("% 5d|"%(i+1), True, (192,)*3)
         line = font.render(lines[i], True, (0,)*3)
 
         surface.blit(num, (0,y))
