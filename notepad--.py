@@ -18,6 +18,8 @@ screen_size = [1024,768]
 
 key_repeat = [300,20] #initial and subsequent delay, in ms
 
+slider_width = 15 #pixels
+
 
 
 #Get filename
@@ -72,9 +74,9 @@ class Slider(object):
 
         self.n = len(lines)
 
-        self.y =  0
-        self.w = 15
-        self.h =  0
+        self.y =            0
+        self.w = slider_width
+        self.h =            0
 
     def update_scroll(self):
         self.part = float(scroll) / float(self.n-1)
