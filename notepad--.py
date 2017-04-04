@@ -143,7 +143,9 @@ def try_scroll_to(to):
     slider.update_scroll()
 frame = 0
 def get_input():
-    global scroll,scrolling,scrolling_uneaten, screen_size, surface, frame
+    global scroll, scrolling, scrolling_uneaten
+    global font, font_size
+    global screen_size, surface, frame
     keys_pressed = pygame.key.get_pressed()
     mouse_buttons = pygame.mouse.get_pressed()
     mouse_position = pygame.mouse.get_pos()
@@ -160,6 +162,12 @@ def get_input():
             elif event.key == K_PAGEUP:
                 page_height_lines = screen_size[1] // font.get_height()
                 try_scroll_by(-(page_height_lines-1))
+            elif event.key == K_EQUALS: #Plus
+                font_size = clamp(font_size+1, 1,72)
+                font = pygame.font.SysFont(font_path_or_search_name,font_size)
+            elif event.key == K_MINUS:
+                font_size = clamp(font_size-1, 1,72)
+                font = pygame.font.SysFont(font_path_or_search_name,font_size)
         elif event.type == MOUSEBUTTONDOWN:
             if   event.button == 1:
                 if mouse_position[0] >= screen_size[0] - slider.w:
