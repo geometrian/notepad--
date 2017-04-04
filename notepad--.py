@@ -27,7 +27,8 @@ from _helpers import *
 
 screen_size = [1024,768]
 
-key_repeat = [300,20] #initial and subsequent delay, in ms
+key_repeat   = [300, 20] #initial and subsequent delay, in ms
+mouse_repeat = [300,100]
 
 slider_width = 15 #pixels
 
@@ -214,7 +215,7 @@ def get_input():
                         scrolling_uneaten = 0
                     else:
                         scrolling = 2
-                        frame = rndint(0.300 * 60)
+                        frame = rndint(mouse_repeat[0]*0.001 * 60)
             elif event.button == 4:
                 try_scroll_by(-5)
             elif event.button == 5:
@@ -242,7 +243,7 @@ def get_input():
         if frame == 0:
             slider.click_toward(mouse_position[1])
             try_scroll_to(rndint( slider.part * slider.n ))
-            frame = rndint(0.100 * 60)
+            frame = rndint(mouse_repeat[1] * 60)
         else:
             frame -= 1
 
