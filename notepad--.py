@@ -1,50 +1,77 @@
+#Imports
+
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
+
+import pygame
+from pygame.locals import *
+
+import sys, os, traceback
+
+from _helpers import *
+
+
+
+#Settings
+
+screen_size = [1024,768]
+
+key_repeat = [300,20] #initial and subsequent delay, in ms
+
+
+
+#Get filename
 
 Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
 filename = askopenfilename()
 
-import pygame
-from pygame.locals import *
-import sys, os, traceback
+if filename == "":
+    sys.exit(0)
+
+
+
+#Initialize libraries
+
 ##if sys.platform in ["win32","win64"]: os.environ["SDL_VIDEO_CENTERED"]="1"
+
 pygame.display.init()
 pygame.font.init()
 
-screen_size = [1024,768]
-icon = pygame.Surface((1,1)); icon.set_alpha(0); pygame.display.set_icon(icon)
-pygame.display.set_caption("Text Viewer - Ian Mallett - v.1.0.0 - 2017")
-surface = pygame.display.set_mode(screen_size,RESIZABLE)
-
-pygame.key.set_repeat(300,20)
+pygame.key.set_repeat(*key_repeat)
 
 font = pygame.font.SysFont( ("consolas"), 12 )
 
+icon = pygame.Surface((1,1)); icon.set_alpha(0); pygame.display.set_icon(icon)
+pygame.display.set_caption("notepad--")
+surface = pygame.display.set_mode(screen_size,RESIZABLE)
 
-file = open(filename,"r")
-data = file.read()
-file.close()
+
+
+#Load file
+
+try:
+    file = open(filename,"r")
+    data = file.read()
+    file.close()
+except:
+    print("Could not open file \"%s\"!"%filename)
+    sys.exit(-1)
 
 lines = data.split("\n")
 
 
+
+#Main
+
 scroll = 0
 scrolling = 0
-page_height = 0 #lines; set in draw
-
-def clamp(num, low,high):
-    if num< low: return  low
-    if num>high: return high
-    return num
-def rndint(num):
-    return int(round(num))
 
 class Slider(object):
     def __init__(self):
         self.part = 0.0
 
         self.n = len(lines)
-        
+
         self.y =  0
         self.w = 15
         self.h =  0
@@ -65,10 +92,10 @@ class Slider(object):
     def click_set(self, mouse_y):
         self.part = self.screen_to_part(mouse_y)
 
-    def draw(self, line_height):
+    def draw(self):
         self.y = int( self.part * (screen_size[1]-self.h) )
 
-        bar_part = float(screen_size[1]) / float(line_height*self.n)
+        bar_part = float(screen_size[1]) / float(font.get_height()*self.n)
         self.h = int(bar_part * screen_size[1])
         if self.h<self.w: self.h=self.w
 
@@ -99,9 +126,11 @@ def get_input():
             elif event.key == K_g and (keys_pressed[K_LALT] or keys_pressed[K_RALT]):
                 scroll = int(input("Go to line: "))
             elif event.key == K_PAGEDOWN:
-                try_scroll_by(  page_height-1 )
+                page_height_lines = screen_size[1] // font.get_height()
+                try_scroll_by(  page_height_lines-1 )
             elif event.key == K_PAGEUP:
-                try_scroll_by(-(page_height-1))
+                page_height_lines = screen_size[1] // font.get_height()
+                try_scroll_by(-(page_height_lines-1))
         elif event.type == MOUSEBUTTONDOWN:
             if   event.button == 1:
                 if mouse_position[0] >= screen_size[0] - slider.w:
@@ -130,11 +159,10 @@ def get_input():
             frame = rndint(0.100 * 60)
         else:
             frame -= 1
-        
+
     return True
 
 def draw():
-    global page_height
     surface.fill((255,)*3)
 
     y = 0
@@ -142,19 +170,17 @@ def draw():
     for i in range(scroll,len(lines),1):
         num = font.render("% 5d|"%(i), True, (192,)*3)
         line = font.render(lines[i], True, (0,)*3)
-        line_height = max([num.get_height(),line.get_height()])
-        
+
         surface.blit(num, (0,y))
         surface.blit(line, (num.get_width(),y))
-        
+
         lines_drawn += 1
-        y += line_height
+        y += font.get_height()
         if y >= screen_size[1]:
             break
-    page_height = screen_size[1] // line_height
 
-    slider.draw(line_height)
-    
+    slider.draw()
+
     pygame.display.flip()
 
 def main():
